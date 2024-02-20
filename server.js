@@ -43,6 +43,25 @@ app.get("/top-transactions", (req, res) => {
     .catch((err) => res.status(500).send(err));
 });
 
+app.get("/transactions", (req, res) => {
+  TransactionSchema.aggregate([
+    {
+      $addFields: {
+        total: { $add: ["$Credit", "$Debit"] },
+      },
+    },
+    {
+      $sort: {
+        total: -1,
+      },
+    },
+    {
+      $limit: 5,
+    },
+  ])
+    .then((result) => res.send(result))
+    .catch((err) => res.status(500).send(err));
+});
 // POST route
 app.post("/post", (req, res) => {
   res.send("POST request received");
