@@ -73,3 +73,11 @@ app.get("/transactions/credit", (req, res) => {
 app.post("/post", (req, res) => {
   res.send("POST request received");
 });
+
+TransactionSchema.updateMany(
+  {},
+  { $set: { Category: "" } },
+  { multi: true, upsert: true }
+)
+  .then((result) => console.log(result))
+  .catch((err) => console.error(err));
