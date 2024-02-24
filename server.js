@@ -3,6 +3,7 @@ const app = express();
 const fs = require("fs");
 const TransactionSchema = require("./schema/Transaction");
 const mongoose = require("mongoose");
+const cors = require("cors");
 require("dotenv").config();
 
 let transactions = {};
@@ -19,11 +20,13 @@ db.on("connected", function () {
 
 db.on("error", console.error.bind(console, "connection error:"));
 
+app.use(cors());
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
 });
 
 app.get("/top-transactions", (req, res) => {
+  console.log("hit");
   TransactionSchema.aggregate([
     {
       $addFields: {
@@ -73,11 +76,3 @@ app.get("/transactions/credit", (req, res) => {
 app.post("/post", (req, res) => {
   res.send("POST request received");
 });
-
-TransactionSchema.updateMany(
-  {},
-  { $set: { Category: "" } },
-  { multi: true, upsert: true }
-)
-  .then((result) => console.log(result))
-  .catch((err) => console.error(err));
