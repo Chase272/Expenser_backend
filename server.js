@@ -4,6 +4,8 @@ const fs = require("fs");
 const TransactionSchema = require("./schema/Transaction");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
+const UserSchema = require("./schema/UserSchema");
 require("dotenv").config();
 
 let transactions = {};
@@ -21,12 +23,13 @@ db.on("connected", function () {
 db.on("error", console.error.bind(console, "connection error:"));
 
 app.use(cors());
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+app.use(express.json());
+
+app.listen(3001, () => {
+  console.log("Server is running on port 3001");
 });
 
 app.get("/top-transactions", (req, res) => {
-  console.log("hit");
   TransactionSchema.aggregate([
     {
       $addFields: {
@@ -72,7 +75,44 @@ app.get("/transactions/credit", (req, res) => {
     .catch((err) => res.status(500).send(err));
 });
 
+app.get("/transactions/byDate", (req, res) => {
+  TransactionSchema.aggregate([
+    {
+      $group: {
+        _id: { $toDate: "$Date" },
+        transactions: { $push: "$$ROOT" },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $sort: {
+        _id: 1,
+      },
+    },
+  ])
+    .then((result) => res.send(result))
+    .catch((err) => console.error(err));
+});
+
 // POST route
 app.post("/post", (req, res) => {
   res.send("POST request received");
+});
+
+app.post("/signIn", (req, res) => {
+  const { username, password } = req.body;
+
+  UserSchema.findOne({ Username: username }).then((user) => {
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (user.password == password) {
+      // Passwords match
+      res.json({ msg: "Success" });
+    } else {
+      // Passwords don't match
+      res.status(400).json({ error: "Invalid credentials" });
+    }
+  });
 });
