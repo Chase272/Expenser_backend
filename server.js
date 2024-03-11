@@ -107,7 +107,26 @@ app.post("/signIn", (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    if (user.password == password) {
+    if (user.Password == password) {
+      // Passwords match
+      res.json({ msg: "Success" });
+    } else {
+      // Passwords don't match
+      res.status(400).json({ error: "Invalid credentials" });
+    }
+  });
+});
+
+
+app.post("/logIn", (req, res) => {
+  const { username, password } = req.body;
+
+  UserSchema.findOne({ Username: username }).then((user) => {
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (user.Password == password) {
       // Passwords match
       res.json({ msg: "Success" });
     } else {
