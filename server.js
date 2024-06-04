@@ -21,7 +21,6 @@ db.on("connected", function () {
 });
 
 db.on("error", console.error.bind(console, "connection error:"));
-
 app.use(cors());
 app.use(express.json());
 
@@ -94,6 +93,37 @@ app.get("/transactions/byDate", (req, res) => {
     .catch((err) => console.error(err));
 });
 
+app.get("/charts/transactions", (req, res) => {
+  TransactionSchema.aggregate([
+    {
+      $group: {
+        _id: {
+          // week: { $week: "$Date" },
+          month: { $month: "$Date" },
+          year: { $year: "$Date" },
+        },
+        income: { $sum: "$Credit" },
+        expense: { $sum: "$Debit" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        // week: "$_id.week",
+        month: "$_id.month",
+        year: "$_id.year",
+        income: 1,
+        expense: 1,
+      },
+    },
+  ])
+    .then((result) => {
+      console.log(result);
+      res.send(result);
+    })
+    .catch((err) => console.error(err));
+});
+
 // POST route
 app.post("/post", (req, res) => {
   res.send("POST request received");
@@ -116,7 +146,6 @@ app.post("/signIn", (req, res) => {
     }
   });
 });
-
 
 app.post("/logIn", (req, res) => {
   const { username, password } = req.body;
