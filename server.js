@@ -118,10 +118,51 @@ app.get("/charts/transactions", (req, res) => {
     },
   ])
     .then((result) => {
-      console.log(result);
+      // console.log(result);
       res.send(result);
     })
     .catch((err) => console.error(err));
+});
+app.post("/details/multiple/category", (req, res) => {
+  const { name, detailCardCategory } = req.body;
+
+  console.log(name);
+  TransactionSchema.updateMany(
+    { Name: name },
+    { $set: { Category: detailCardCategory } }
+  )
+    .then((updateResult) => {
+      res.status(200).send("Document updated successfully!");
+      console.log("Documents updated:", updateResult.modifiedCount);
+    })
+    .catch((error) => {
+      res.status(404).send("Server Error");
+      console.error("Error updating documents:", error);
+    });
+});
+
+app.post("/details/single/category", (req, res) => {
+  const { description, detailCardCategory } = req.body;
+
+  // console.log("hit");
+
+  TransactionSchema.findOne({ Description: description })
+    .then((transaction) => {
+      if (!transaction) {
+        return res.status(404).json({ error: "Tranasction Not Found" });
+      } else {
+        transaction.Category = detailCardCategory;
+        return transaction.save();
+      }
+    })
+    .then(() => {
+      console.log("Document updated successfully!");
+      res.status(200).send("Document updated successfully!");
+    })
+    .catch((error) => {
+      res.status(404).send("Server Error");
+      console.error("Error finding or saving document:", error);
+    });
 });
 
 // POST route
