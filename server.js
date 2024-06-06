@@ -123,6 +123,52 @@ app.get("/charts/transactions", (req, res) => {
     })
     .catch((err) => console.error(err));
 });
+
+app.get("/category/byGroup", (req, res) => {
+  TransactionSchema.aggregate([
+    { $match: { Transaction_Type: "Debit" } },
+    {
+      $group: {
+        _id: {
+          Category: "$Category",
+        },
+
+        totalDebit: { $sum: "$Debit" },
+      },
+    },
+    {
+      $sort: {
+        totalDebit: -1,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalDebitAll: { $sum: "$totalDebit" },
+        categories: { $push: "$$ROOT" },
+      },
+    },
+    {
+      $unwind: "$categories",
+    },
+    {
+      $project: {
+        _id: 0,
+        category: "$categories._id.Category",
+        totalDebit: "$categories.totalDebit",
+        percentage: {
+          $multiply: [
+            { $divide: ["$categories.totalDebit", "$totalDebitAll"] },
+            100,
+          ],
+        },
+      },
+    },
+  ])
+    .then((result) => res.send(result))
+    .catch((err) => res.status(500).send(err));
+});
+
 app.post("/details/multiple/category", (req, res) => {
   const { name, detailCardCategory } = req.body;
 
