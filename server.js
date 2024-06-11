@@ -4,6 +4,8 @@ const fs = require("fs");
 const TransactionSchema = require("./schema/Transaction");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" }); // This will save files to an 'uploads' directory
 
 const UserSchema = require("./schema/UserSchema");
 require("dotenv").config();
@@ -167,6 +169,24 @@ app.get("/category/byGroup", (req, res) => {
   ])
     .then((result) => res.send(result))
     .catch((err) => res.status(500).send(err));
+});
+
+app.post("/upload-pdf", upload.single("pdf"), (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).send("No file uploaded");
+      return;
+    }
+
+    // req.file is the `pdf` file
+    const file = req.file;
+
+    // You can now use the file object for further processing, e.g., saving the file to a database, etc.
+
+    res.status(200).send("File uploaded successfully");
+  } catch (err) {
+    res.status(500).send(err);
+  }
 });
 
 app.post("/details/multiple/category", (req, res) => {
