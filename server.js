@@ -5,7 +5,8 @@ const TransactionSchema = require("./schema/Transaction");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" }); // This will save files to an 'uploads' directory
+const path = require("path");
+// This will save files to an 'uploads' directory
 
 const UserSchema = require("./schema/UserSchema");
 require("dotenv").config();
@@ -17,7 +18,18 @@ const MONGO_URL = process.env.MONGO_URL;
 
 mongoose.connect(MONGO_URL);
 const db = mongoose.connection;
-
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+    );
+  },
+});
+const upload = multer({ storage: storage });
 db.on("connected", function () {
   console.log("connection is sucessfull");
 });
@@ -171,9 +183,10 @@ app.get("/category/byGroup", (req, res) => {
     .catch((err) => res.status(500).send(err));
 });
 
-app.post("/upload-pdf", upload.single("pdf"), (req, res) => {
+app.post("/upload-pdf", upload.single("pdfFile"), (req, res) => {
   try {
     if (!req.file) {
+      console.log("No File");
       res.status(400).send("No file uploaded");
       return;
     }
@@ -182,9 +195,10 @@ app.post("/upload-pdf", upload.single("pdf"), (req, res) => {
     const file = req.file;
 
     // You can now use the file object for further processing, e.g., saving the file to a database, etc.
-
+    console.log(file);
     res.status(200).send("File uploaded successfully");
   } catch (err) {
+    console.log("Error");
     res.status(500).send(err);
   }
 });
